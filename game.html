@@ -2,213 +2,179 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Viento // Singularity Engine</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viento | Singularity Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #c5a47e; --bg: #050505; }
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
-        body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+        :root {
+            --gold: #c5a47e;
+            --bg: #050505;
+        }
 
-        /* ИГРОВАЯ ЗОНА */
-        #game-container { position: relative; width: 100vw; height: 80vh; background: #000; overflow: hidden; border-bottom: 1px solid rgba(197, 164, 126, 0.1); }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: var(--bg);
+            font-family: 'Montserrat', sans-serif;
+        }
+
         canvas { display: block; }
 
-        #ui {
-            position: absolute; top: 30px; width: 100%; display: flex; 
-            justify-content: center; gap: 50px; pointer-events: none;
-            font-size: 0.6rem; letter-spacing: 8px; color: rgba(255,255,255,0.2); text-transform: uppercase;
+        /* ИНФО-БЛОК ПО ЦЕНТРУ */
+        .info-overlay {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center; pointer-events: none;
+            z-index: 1000; transition: transform 0.1s ease-out;
         }
-        #ui span { color: var(--gold); font-weight: 900; }
 
-        /* ЭКРАН СМЕРТИ (КУРСОР ВОЗВРАЩАЕТСЯ) */
-        #death {
-            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.95);
-            flex-direction: column; align-items: center; justify-content: center;
-            z-index: 100; backdrop-filter: blur(20px); text-align: center;
-            cursor: auto !important; 
+        .info-overlay h2 {
+            font-weight: 100; letter-spacing: 20px;
+            text-transform: uppercase; margin: 0; font-size: 0.8rem;
+            color: var(--gold); opacity: 0.8;
         }
-        #death h2 { font-weight: 900; font-size: 3rem; color: var(--gold); letter-spacing: 10px; margin-bottom: 20px; }
-        
-        .btn {
-            border: 1px solid #fff; color: #fff; padding: 15px 40px; 
-            text-transform: uppercase; letter-spacing: 5px; background: transparent; transition: 0.5s;
-            cursor: pointer; font-family: 'Montserrat';
-        }
-        .btn:hover { background: #fff; color: #000; box-shadow: 0 0 50px var(--gold); }
 
-        /* ИНФОРМАЦИОННОЕ ПОЛЕ (СМЫСЛ И КОД) */
-        .info-section { 
-            max-width: 900px; margin: 0 auto; padding: 100px 20px; 
-            cursor: auto !important; /* Здесь тоже возвращаем курсор */
+        /* СТИЛИ ДЛЯ ЛОГОТИПА DV */
+        .dv-logo-overlay {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999; pointer-events: none;
+            opacity: 0.2; filter: blur(1px);
+            transition: transform 0.15s ease-out;
         }
-        .info-section h3 { 
-            font-size: 0.7rem; color: var(--gold); letter-spacing: 5px; 
-            text-transform: uppercase; margin-bottom: 50px; text-align: center;
-        }
-        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
-        .info-block h4 { font-size: 1.2rem; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 900; }
-        .info-block p { font-size: 0.9rem; color: #777; line-height: 1.8; font-weight: 300; }
-        .info-block span { color: #fff; font-weight: 400; }
 
-        @media (max-width: 768px) {
-            .grid-info { grid-template-columns: 1fr; }
-            #game-container { height: 60vh; }
-            * { cursor: auto; }
+        .dv-logo-overlay svg text {
+            fill: var(--gold); font-weight: 900; font-size: 80px;
+            text-shadow: 0 0 40px rgba(197, 164, 126, 0.6);
+        }
+
+        .back-link {
+            position: fixed; bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            color: var(--gold); text-decoration: none;
+            font-size: 0.6rem; letter-spacing: 5px;
+            text-transform: uppercase; border: 1px solid rgba(197, 164, 126, 0.3);
+            padding: 10px 20px; border-radius: 50px;
+            transition: 0.3s; z-index: 1001;
+        }
+
+        .back-link:hover {
+            background: var(--gold); color: #000;
+            box-shadow: 0 0 20px rgba(197, 164, 126, 0.4);
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="ui">
-            <div>МАССА: <span id="mass">0</span></div>
-            <div>СИНХРОНИЗАЦИЯ: <span id="stab">100%</span></div>
-        </div>
-
-        <div id="death">
-            <h2>КОЛЛАПС</h2>
-            <p style="color: #666; margin-bottom: 40px; letter-spacing: 2px;">ТЫ БЫЛ ХОРОШ, МУЖИК. НО ВСЕЛЕННАЯ СИЛЬНЕЕ.</p>
-            <button class="btn" onclick="location.reload()">ПЕРЕЗАГРУЗКА ЦИКЛА</button>
-            <a href="/" style="display:block; margin-top:20px; color:#222; text-decoration:none; font-size:0.5rem; letter-spacing:3px;">ВЫХОД В ПОРТФОЛИО</a>
-        </div>
-
-        <canvas id="c"></canvas>
+    <div class="dv-logo-overlay" id="dvLogo">
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width="400" height="400">
+            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">DV</text>
+        </svg>
     </div>
 
-    <section class="info-section">
-        <h3>ENGINE SPECIFICATIONS // СПЕЦИФИКАЦИИ</h3>
-        
-        <div class="grid-info">
-            <div class="info-block">
-                <h4>Смысл игры</h4>
-                <p>
-                    <span>Сингулярность Viento</span> — это метафора творческого процесса. Ты — ядро, центр гравитации. Ты притягиваешь чистые идеи (золотые сгустки), наращивая массу своего влияния. Красные кольца — это «цифровой шум» и деструктивная критика. Один контакт с ними разрушает стабильность системы. Задача: удерживать фокус в хаосе.
-                </p>
-            </div>
-            <div class="info-block">
-                <h4>Как работает код</h4>
-                <p>
-                    Движок написан на чистом <span>JavaScript (Canvas API)</span> без сторонних библиотек. Мы используем систему векторов для симуляции физики притяжения. Каждая частица на фоне имеет свой коэффициент трения и массу, создавая эффект динамической жидкости. Это не просто картинка — это математическая модель поведения частиц в гравитационном поле.
-                </p>
-            </div>
-            <div class="info-block">
-                <h4>Технологии</h4>
-                <p>
-                    — <span>Math.atan2:</span> вычисление углов атаки врагов.<br>
-                    — <span>RequestAnimationFrame:</span> идеальные 60 FPS для плавности.<br>
-                    — <span>Radial Gradients:</span> создание глубины пространства.<br>
-                    — <span>Collision Detection:</span> алгоритм проверки пересечения радиусов в реальном времени.
-                </p>
-            </div>
-            <div class="info-block">
-                <h4>Философия</h4>
-                <p>
-                    Сайт дизайнера — это не склад картинок. Это демонстрация того, как автор управляет вниманием. Мы создали среду, где пользователь не просто смотрит, а <span>взаимодействует</span> с эстетикой на уровне инстинктов.
-                </p>
-            </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 80px; opacity: 0.2; font-size: 0.6rem; letter-spacing: 3px;">
-            DESIGNED & ENGINEERED BY DANIEL` VIENTO // 2026
-        </div>
-    </section>
+    <div class="info-overlay" id="infoBlock">
+        <h2>Singularity Engine</h2>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <a href="index.html" class="back-link">Вернуться в реальность</a>
 
     <script>
-        const canvas = document.getElementById('c');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const massEl = document.getElementById('mass');
-        const container = document.getElementById('game-container');
-        
-        let w, h, particles = [], points = [], enemies = [];
-        let mouse = { x: -1000, y: -1000 };
-        let score = 0;
-        let active = true;
+        const infoBlock = document.getElementById('infoBlock');
+        const dvLogo = document.getElementById('dvLogo');
 
-        container.addEventListener('mousemove', e => {
-            const rect = container.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left;
-            mouse.y = e.clientY - rect.top;
+        let particles = [];
+        const mouse = { x: null, y: null, radius: 200 };
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+
+            // Параллакс эффект для текста и лого
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            const moveX = (e.clientX - centerX) / 50;
+            const moveY = (e.clientY - centerY) / 50;
+            infoBlock.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+
+            const dvMoveX = (e.clientX - centerX) / 80;
+            const dvMoveY = (e.clientY - centerY) / 80;
+            dvLogo.style.transform = `translate(calc(-50% + ${dvMoveX}px), calc(-50% + ${dvMoveY}px))`;
         });
 
-        function init() {
-            w = canvas.width = container.offsetWidth;
-            h = canvas.height = container.offsetHeight;
-            particles = [];
-            for(let i=0; i<100; i++) particles.push({
-                x: Math.random()*w, y: Math.random()*h, 
-                vx: 0, vy: 0, 
-                acc: Math.random()*0.02 + 0.01,
-                size: Math.random()*2
-            });
-            points = [];
-            enemies = [];
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
+        window.addEventListener('resize', resize);
+        resize();
 
-        function spawnPoint() {
-            if(points.length < 5) points.push({ x: Math.random()*w, y: Math.random()*h, r: 0 });
-        }
-        function spawnEnemy() {
-            if(enemies.length < 3 + score/50) {
-                let side = Math.floor(Math.random()*4);
-                let x, y;
-                if(side==0) { x=Math.random()*w; y=-20; }
-                if(side==1) { x=w+20; y=Math.random()*h; }
-                if(side==2) { x=Math.random()*w; y=h+20; }
-                if(side==3) { x=-20; y=Math.random()*h; }
-                enemies.push({ x, y, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2 });
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(197, 164, 126, 0.7)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            update() {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                let forceDirectionX = dx / distance;
+                let forceDirectionY = dy / distance;
+                let maxDistance = mouse.radius;
+                let force = (maxDistance - distance) / maxDistance;
+                let directionX = forceDirectionX * force * this.density;
+                let directionY = forceDirectionY * force * this.density;
+
+                if (distance < mouse.radius) {
+                    this.x += directionX;
+                    this.y += directionY;
+                } else {
+                    if (this.x !== this.baseX) {
+                        let dx = this.x - this.baseX;
+                        this.x -= dx / 20;
+                    }
+                    if (this.y !== this.baseY) {
+                        let dy = this.y - this.baseY;
+                        this.y -= dy / 20;
+                    }
+                }
             }
         }
 
-        function draw() {
-            if(!active) return;
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.fillRect(0,0,w,h);
-
-            particles.forEach(p => {
-                let dx = mouse.x - p.x;
-                let dy = mouse.y - p.y;
-                let d = Math.sqrt(dx*dx + dy*dy);
-                if(d < 300) {
-                    p.vx += dx * p.acc / (d * 0.1);
-                    p.vy += dy * p.acc / (d * 0.1);
-                }
-                p.x += p.vx; p.y += p.vy;
-                p.vx *= 0.95; p.vy *= 0.95;
-                ctx.fillStyle = `rgba(197, 164, 126, ${0.1 + (300-d)/1500})`;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
-            });
-
-            spawnPoint();
-            points.forEach((p, i) => {
-                p.r += 0.1;
-                ctx.shadowBlur = 15; ctx.shadowColor = '#c5a47e';
-                ctx.fillStyle = '#c5a47e';
-                ctx.beginPath(); ctx.arc(p.x, p.y, 5 + Math.sin(p.r)*2, 0, Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 0;
-                if(Math.sqrt((p.x-mouse.x)**2 + (p.y-mouse.y)**2) < 30) { points.splice(i, 1); score += 10; massEl.innerText = score; }
-            });
-
-            spawnEnemy();
-            enemies.forEach((e, i) => {
-                let dx = mouse.x - e.x; let dy = mouse.y - e.y;
-                let d = Math.sqrt(dx*dx+dy*dy);
-                e.vx += dx * 0.00015; e.vy += dy * 0.00015;
-                e.x += e.vx; e.y += e.vy;
-                ctx.strokeStyle = '#ff4d4d'; ctx.lineWidth = 1;
-                ctx.beginPath(); ctx.arc(e.x, e.y, 10, 0, Math.PI*2); ctx.stroke();
-                if(d < 15) { active = false; document.getElementById('death').style.display='flex'; }
-            });
-
-            ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI*2);
-            ctx.fillStyle = '#fff'; ctx.shadowBlur = 30; ctx.shadowColor = '#fff';
-            ctx.fill(); ctx.shadowBlur = 0;
-
-            requestAnimationFrame(draw);
+        function init() {
+            particles = [];
+            for (let i = 0; i < 150; i++) {
+                particles.push(new Particle());
+            }
         }
 
-        window.onresize = init;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].draw();
+                particles[i].update();
+            }
+            requestAnimationFrame(animate);
+        }
+
         init();
-        draw();
+        animate();
     </script>
 </body>
 </html>
