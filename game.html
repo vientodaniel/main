@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viento | Singularity Engine</title>
+    <title>Viento | Design Singularity Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gold: #c5a47e;
-            --bg: #050505;
+            --bg: #050505; /* Глубокий черный фон */
+            --gold: #c5a47e; /* Золотой акцент */
+            --white: #ffffff; /* Белый для свечения */
+            --red: #ff3b3b; /* Ярко-красный для частиц */
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background: var(--bg);
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Montserrat', sans-serif; cursor: none; /* Скрываем стандартный курсор */
         }
 
         canvas { display: block; }
 
-        /* ИНФО-БЛОК ПО ЦЕНТРУ */
+        /* ИНФО-БЛОК ПО ЦЕНТРУ: ТЕКСТ ПОД ЛОГО */
         .info-overlay {
-            position: fixed; top: 50%; left: 50%;
+            position: fixed; top: calc(50% + 120px); left: 50%;
             transform: translate(-50%, -50%);
             text-align: center; pointer-events: none;
             z-index: 1000; transition: transform 0.1s ease-out;
@@ -30,36 +32,59 @@
         .info-overlay h2 {
             font-weight: 100; letter-spacing: 20px;
             text-transform: uppercase; margin: 0; font-size: 0.8rem;
-            color: var(--gold); opacity: 0.8;
+            color: var(--gold); 
+            /* СОЧНОЕ БЕЛОЕ СВЕЧЕНИЕ НА ТЕКСТЕ */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 
+                         0 0 30px rgba(197, 164, 126, 0.8);
         }
 
-        /* СТИЛИ ДЛЯ ЛОГОТИПА DV */
+        /* СТИЛИ ДЛЯ ЛОГОТИПА DV В ЦЕНТРЕ */
         .dv-logo-overlay {
             position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             z-index: 999; pointer-events: none;
-            opacity: 0.2; filter: blur(1px);
+            opacity: 0.3; filter: blur(1px);
             transition: transform 0.15s ease-out;
         }
 
         .dv-logo-overlay svg text {
             fill: var(--gold); font-weight: 900; font-size: 80px;
-            text-shadow: 0 0 40px rgba(197, 164, 126, 0.6);
+            text-anchor: middle; dominant-baseline: middle;
+            /* МОЩНОЕ ЗОЛОТОЕ + БЕЛОЕ СВЕЧЕНИЕ НА ЛОГО */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 
+                         0 0 50px rgba(197, 164, 126, 0.8),
+                         0 0 100px rgba(197, 164, 126, 0.5);
         }
 
+        /* КНОПКА ВОЗВРАТА */
         .back-link {
             position: fixed; bottom: 40px; left: 50%;
             transform: translateX(-50%);
             color: var(--gold); text-decoration: none;
             font-size: 0.6rem; letter-spacing: 5px;
             text-transform: uppercase; border: 1px solid rgba(197, 164, 126, 0.3);
-            padding: 10px 20px; border-radius: 50px;
-            transition: 0.3s; z-index: 1001;
+            padding: 15px 30px; border-radius: 50px;
+            transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); z-index: 1001;
+            /* Свечение на кнопке */
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(197, 164, 126, 0.1);
         }
 
         .back-link:hover {
             background: var(--gold); color: #000;
-            box-shadow: 0 0 20px rgba(197, 164, 126, 0.4);
+            box-shadow: 0 0 30px rgba(197, 164, 126, 0.5);
+            text-shadow: none; transform: translateX(-50%) translateY(-2px);
+        }
+
+        /* КАСТОМНЫЙ КУРСОР-СИЯНИЕ */
+        #cursor-glow {
+            position: fixed; width: 10px; height: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%; pointer-events: none; z-index: 1002;
+            mix-blend-mode: difference;
+            transition: transform 0.05s ease-out, opacity 0.3s;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 1),
+                        0 0 40px rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
@@ -67,7 +92,7 @@
 
     <div class="dv-logo-overlay" id="dvLogo">
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width="400" height="400">
-            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">DV</text>
+            <text x="50" y="50">DV</text>
         </svg>
     </div>
 
@@ -77,37 +102,48 @@
 
     <canvas id="canvas"></canvas>
 
-    <a href="index.html" class="back-link">Вернуться в реальность</a>
+    <a href="./" class="back-link">Вернуться в реальность</a>
+
+    <div id="cursor-glow"></div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const infoBlock = document.getElementById('infoBlock');
         const dvLogo = document.getElementById('dvLogo');
+        const cursorGlow = document.getElementById('cursor-glow');
 
         let particles = [];
-        const mouse = { x: null, y: null, radius: 200 };
+        const mouse = { x: -100, y: -100, radius: 150 }; // Радиус отталкивания
 
+        // ЛОГИКА МЫШИ (Параллакс + Отталкивание частиц)
         window.addEventListener('mousemove', (e) => {
             mouse.x = e.x;
             mouse.y = e.y;
+            
+            // Сдвиг кастомного курсора
+            cursorGlow.style.left = mouse.x + 'px';
+            cursorGlow.style.top = mouse.y + 'px';
 
-            // Параллакс эффект для текста и лого
+            // Расчет сдвига для параллакса
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
             
-            const moveX = (e.clientX - centerX) / 50;
-            const moveY = (e.clientY - centerY) / 50;
+            // Текст двигается быстрее (на переднем плане)
+            const moveX = (e.clientX - centerX) / 40;
+            const moveY = (e.clientY - centerY) / 40;
             infoBlock.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
 
-            const dvMoveX = (e.clientX - centerX) / 80;
-            const dvMoveY = (e.clientY - centerY) / 80;
+            // Логотип двигается медленнее (создает глубину)
+            const dvMoveX = (e.clientX - centerX) / 70;
+            const dvMoveY = (e.clientY - centerY) / 70;
             dvLogo.style.transform = `translate(calc(-50% + ${dvMoveX}px), calc(-50% + ${dvMoveY}px))`;
         });
 
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            init(); // Переинициализируем частицы при ресайзе
         }
         window.addEventListener('resize', resize);
         resize();
@@ -116,14 +152,14 @@
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 0.5;
+                this.size = Math.random() * 2 + 1; // Чуть увеличил размер для сочности
                 this.baseX = this.x;
                 this.baseY = this.y;
-                this.density = (Math.random() * 30) + 1;
+                this.density = (Math.random() * 20) + 1; // "Тяжесть" частицы
             }
 
             draw() {
-                ctx.fillStyle = 'rgba(197, 164, 126, 0.7)';
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--red');
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.closePath();
@@ -131,35 +167,49 @@
             }
 
             update() {
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-                let forceDirectionX = dx / distance;
-                let forceDirectionY = dy / distance;
-                let maxDistance = mouse.radius;
-                let force = (maxDistance - distance) / maxDistance;
-                let directionX = forceDirectionX * force * this.density;
-                let directionY = forceDirectionY * force * this.density;
+                // ЛОГИКА НОВОЙ КРАСНОЙ СИНГУЛЯРНОСТИ:
+                // Мышь — это гравитационный отталкиватель.
+                // Частицы образуют сферу в центре и разлетаются, когда курсор рядом.
+                
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const sphereRadius = Math.min(canvas.width, canvas.height) * 0.25;
 
-                if (distance < mouse.radius) {
-                    this.x += directionX;
-                    this.y += directionY;
-                } else {
-                    if (this.x !== this.baseX) {
-                        let dx = this.x - this.baseX;
-                        this.x -= dx / 20;
-                    }
-                    if (this.y !== this.baseY) {
-                        let dy = this.y - this.baseY;
-                        this.y -= dy / 20;
-                    }
+                // Базовое движение: Частицы стремятся образовать сферу в центре
+                let angle = (Math.atan2(this.baseY - centerY, this.baseX - centerX));
+                const dxBase = Math.cos(angle) * sphereRadius;
+                const dyBase = Math.sin(angle) * sphereRadius;
+                const targetX = centerX + dxBase;
+                const targetY = centerY + dyBase;
+
+                // Плавное возвращение к базовой форме
+                this.x -= (this.x - targetX) / 100;
+                this.y -= (this.y - targetY) / 100;
+
+                // Взаимодействие с мышью: Отталкивание
+                let dxMouse = mouse.x - this.x;
+                let dyMouse = mouse.y - this.y;
+                let distanceMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+                
+                if (distanceMouse < mouse.radius) {
+                    // Рассчитываем силу и направление отталкивания
+                    let forceDirectionX = dxMouse / distanceMouse;
+                    let forceDirectionY = dyMouse / distanceMouse;
+                    let maxDistance = mouse.radius;
+                    let force = (maxDistance - distanceMouse) / maxDistance;
+                    let directionX = forceDirectionX * force * this.density;
+                    let directionY = forceDirectionY * force * this.density;
+
+                    // Убегаем от курсора
+                    this.x -= directionX;
+                    this.y -= directionY;
                 }
             }
         }
 
         function init() {
             particles = [];
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 200; i++) { // Увеличил количество частиц
                 particles.push(new Particle());
             }
         }
