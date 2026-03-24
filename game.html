@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Daniel` Viento | Viento Breaker</title>
+    <title>Daniel` Viento | Viento Breaker Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --gold: #c5a47e;
-            --white: #ffffff;
-            --panel-bg: rgba(10, 10, 10, 0.98);
+            --bg: #050505; --gold: #c5a47e; --white: #ffffff; --red: #ff3b3b;
         }
         * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
         body, html {
@@ -20,89 +17,85 @@
         }
 
         #game-container {
-            position: relative; width: 100%; height: calc(100% - 250px);
+            position: relative; width: 100%; height: calc(100% - 280px);
             display: flex; justify-content: center; align-items: center;
         }
         canvas { display: block; }
 
         /* НИЖНЯЯ ПАНЕЛЬ */
         #info-panel {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 250px;
-            background: var(--panel-bg); padding: 30px;
-            border-top: 1px solid rgba(197, 164, 126, 0.1);
-            z-index: 100; cursor: auto; display: flex; gap: 40px;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 280px;
+            background: rgba(8, 8, 8, 0.98); padding: 25px;
+            border-top: 1px solid rgba(197, 164, 126, 0.15);
+            z-index: 100; cursor: auto; display: flex; gap: 30px; overflow-y: auto;
         }
 
-        .info-section { flex: 2; color: var(--white); }
-        .changelog-section { 
-            flex: 1; border-left: 1px solid rgba(197, 164, 126, 0.1); 
-            padding-left: 30px; display: flex; flex-direction: column;
-        }
+        .info-main { flex: 2; color: var(--white); }
+        .info-side { flex: 1; border-left: 1px solid rgba(197, 164, 126, 0.1); padding-left: 25px; }
 
-        h3 { font-size: 0.9rem; font-weight: 400; color: var(--gold); text-transform: uppercase; letter-spacing: 4px; margin: 0 0 15px; }
-        p { font-size: 0.8rem; font-weight: 100; opacity: 0.7; line-height: 1.6; margin-bottom: 10px; }
+        h3 { font-size: 0.85rem; font-weight: 400; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; margin: 0 0 12px; }
+        p { font-size: 0.75rem; font-weight: 100; opacity: 0.7; line-height: 1.6; margin-bottom: 8px; }
         b { color: var(--gold); font-weight: 400; }
 
-        /* ПЛАШКА ОБНОВЛЕНИЙ */
-        .update-tag {
-            display: inline-block; padding: 4px 10px; background: rgba(197, 164, 126, 0.1);
-            border: 1px solid var(--gold); border-radius: 4px; color: var(--gold);
-            font-size: 0.6rem; font-weight: 900; margin-bottom: 10px;
-        }
-
         .back-link {
-            position: absolute; top: 20px; left: 20px;
+            position: absolute; top: 15px; left: 15px;
             color: var(--gold); text-decoration: none;
-            font-size: 0.6rem; letter-spacing: 3px;
+            font-size: 0.6rem; letter-spacing: 2px;
             text-transform: uppercase; border: 1px solid rgba(197, 164, 126, 0.2);
-            padding: 8px 15px; border-radius: 50px; z-index: 1001;
+            padding: 6px 12px; border-radius: 50px; z-index: 1001;
         }
 
+        /* ОВЕРЛЕЙ КОНЦА ИГРЫ */
         #game-over-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 99;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.85); z-index: 99;
+            display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center;
         }
+        #status-text { font-size: 3rem; font-weight: 900; letter-spacing: 15px; margin-bottom: 10px; text-transform: uppercase; }
 
         #cursor-glow {
-            position: fixed; width: 15px; height: 15px; background: #fff;
+            position: fixed; width: 12px; height: 12px; background: #fff;
             border-radius: 50%; pointer-events: none; z-index: 1002;
-            mix-blend-mode: difference; box-shadow: 0 0 20px #fff;
+            mix-blend-mode: difference; box-shadow: 0 0 15px #fff;
         }
 
+        .surprise-tag { color: var(--gold); font-size: 0.7rem; letter-spacing: 2px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+
         @media (max-width: 900px) {
-            #info-panel { flex-direction: column; height: 350px; overflow-y: auto; gap: 20px; }
-            .changelog-section { border-left: none; padding-left: 0; border-top: 1px solid rgba(197, 164, 126, 0.1); padding-top: 20px; }
-            #game-container { height: calc(100% - 350px); }
+            #info-panel { flex-direction: column; height: 300px; }
+            .info-side { border-left: none; border-top: 1px solid rgba(197, 164, 126, 0.1); padding: 15px 0 0; }
+            #game-container { height: calc(100% - 300px); }
             #cursor-glow { display: none; }
         }
     </style>
 </head>
 <body>
     <div id="cursor-glow"></div>
-    <a href="./" class="back-link">← Портфолио</a>
+    <a href="./" class="back-link">← Вернуться</a>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="game-over-overlay" onclick="startGame()">
-            <h1 id="status-text" style="font-weight:900; letter-spacing:15px; color:#c5a47e;">VIENTO</h1>
-            <p style="color:#fff; opacity:0.5; letter-spacing:5px;">КЛИКНИ ДЛЯ СТАРТА</p>
+            <h1 id="status-text">VIENTO</h1>
+            <p id="sub-status" style="color:#fff; opacity:0.6; letter-spacing:3px; font-size: 0.8rem;">КЛИКНИ ДЛЯ СТАРТА</p>
+            <div class="surprise-tag">Дойди до конца — там сюрприз ;)</div>
         </div>
     </div>
 
     <div id="info-panel">
-        <div class="info-section">
-            <h3>VIENTO BREAKER ENGINE // О ПРОЕКТЕ</h3>
-            <p><b>Концепция:</b> Эта игра — метафора творческого процесса. Она показывает, что даже в жестких рамках рутины можно найти яркий путь, если точно управлять своими действиями.</p>
-            <p><b>Технологии:</b> Движок на <b>Vanilla JS</b> и <b>HTML5 Canvas</b>. Оптимизированная физика столкновений и система динамического свечения блоков.</p>
+        <div class="info-main">
+            <h3>VIENTO BREAKER // CONCEPT</h3>
+            <p><b>Суть игры:</b> Классическая аркада Breaker в фирменном стиле Daniel` Viento. Вы управляете золотой платформой (ваша идентичность), задача которой — удерживать в игре красный шар (ваши идеи). Шар разбивает серые блоки рутины и шаблонов.</p>
+            <p><b>Как играть:</b> На компьютере управляйте <b>мышью</b>. На телефоне — просто проведите <b>пальцем (тап)</b> по нижней части поля.</p>
+            <p><b>Концепция:</b> Эта игра — метафора творческого процесса. Даже в жестких рамках рутины можно найти яркий, светящийся путь, если точно управлять своими действиями.</p>
+            <p><b>На чем написано:</b> Чистый <b>JavaScript (Vanilla JS)</b>, отрисовка в <b>HTML5 Canvas</b>, стилизация CSS3.</p>
         </div>
 
-        <div class="changelog-section">
-            <div class="update-tag">NEW UPDATE v2.1</div>
-            <h3>ПОСЛЕДНИЕ ИЗМЕНЕНИЯ:</h3>
-            <p>• <b>Soft Palette:</b> Плитки теперь имеют мягкие пастельные оттенки.</p>
-            <p>• <b>Velocity Control:</b> Снижена базовая скорость для лучшего контроля.</p>
-            <p>• <b>Responsive UI:</b> Обновлена нижняя панель и плашка новостей.</p>
+        <div class="info-side">
+            <h3>COLOR SPECTRUM ENGINE</h3>
+            <p>Это обновленная версия: снижена скорость шара для комфорта и добавлена палитра <b>Soft Neon</b>. Каждый цвет — новый уровень визуального отклика.</p>
+            <p><b>Технологии:</b> JS Canvas, оптимизированная физика, динамическое свечение (Bloom Effect).</p>
         </div>
     </div>
 
@@ -111,57 +104,57 @@
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('game-over-overlay');
     const statusText = document.getElementById('status-text');
+    const subStatus = document.getElementById('sub-status');
     const cursor = document.getElementById('cursor-glow');
 
     let isMobile = window.innerWidth < 768;
-    // ПАЛИТРА ПРИЯТНЫХ ГЛАЗУ ЦВЕТОВ
     const SOFT_COLORS = ['#a8dadc', '#f1faee', '#e9c46a', '#f4a261', '#e76f51', '#8d99ae', '#b5838d'];
     
-    let paddle, ball, bricks = [], score = 0, gameRunning = false;
+    let paddle, ball, bricks = [], fireworks = [], score = 0, gameRunning = false;
 
     function init() {
         const container = document.getElementById('game-container');
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
+        canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
 
         paddle = {
-            width: isMobile ? 110 : 160,
-            height: 12,
-            x: (canvas.width - (isMobile ? 110 : 160)) / 2,
-            y: canvas.height - 30
+            width: isMobile ? 110 : 160, height: 12,
+            x: (canvas.width - (isMobile ? 110 : 160)) / 2, y: canvas.height - 30
         };
 
         ball = {
-            x: canvas.width / 2,
-            y: paddle.y - 15,
-            radius: 6,
-            speed: isMobile ? 3.5 : 4.8,
-            dx: 3 * (Math.random() > 0.5 ? 1 : -1),
-            dy: -3.5
+            x: canvas.width / 2, y: paddle.y - 15, radius: 6,
+            speed: isMobile ? 3.8 : 4.8, dx: 3, dy: -3.5
         };
 
-        const cols = isMobile ? 7 : 12;
-        const rows = isMobile ? 5 : 7;
-        const padding = 5;
-        const bWidth = (canvas.width - 20) / cols;
-        const bHeight = 24;
+        const cols = isMobile ? 7 : 12; const rows = isMobile ? 5 : 7;
+        const padding = 5; const bWidth = (canvas.width - 20) / cols; const bHeight = 24;
 
         bricks = [];
         for(let c=0; c<cols; c++) {
             bricks[c] = [];
             for(let r=0; r<rows; r++) {
-                // Каждая плитка получает случайный цвет из палитры
-                const randomColor = SOFT_COLORS[Math.floor(Math.random() * SOFT_COLORS.length)];
-                bricks[c][r] = { x: c*bWidth + 10, y: r*bHeight + 60, w: bWidth-padding, h: bHeight-padding, s: 1, color: randomColor };
+                bricks[c][r] = { 
+                    x: c*bWidth + 10, y: r*bHeight + 60, w: bWidth-padding, h: bHeight-padding, 
+                    s: 1, color: SOFT_COLORS[Math.floor(Math.random() * SOFT_COLORS.length)] 
+                };
             }
         }
     }
 
+    function createFirework() {
+        for(let i=0; i<50; i++) {
+            fireworks.push({
+                x: canvas.width / 2, y: canvas.height / 2,
+                dx: (Math.random() - 0.5) * 10, dy: (Math.random() - 0.5) * 10,
+                size: Math.random() * 3, color: SOFT_COLORS[Math.floor(Math.random()*SOFT_COLORS.length)],
+                life: 100
+            });
+        }
+    }
+
     function startGame() {
-        score = 0; gameRunning = true;
-        overlay.style.display = 'none';
-        init();
-        update();
+        score = 0; fireworks = []; gameRunning = true; overlay.style.display = 'none';
+        init(); update();
     }
 
     window.addEventListener('mousemove', e => {
@@ -190,7 +183,8 @@
         }
 
         if(ball.y > canvas.height) {
-            gameRunning = false; statusText.innerText = "LOSE"; statusText.style.color = "#ff3b3b"; overlay.style.display = 'flex';
+            gameRunning = false; statusText.innerText = "LOSE"; statusText.style.color = "#ff3b3b"; 
+            subStatus.innerText = "ПОПРОБУЙ ЕЩЕ РАЗ"; overlay.style.display = 'flex';
         }
 
         for(let c=0; c<bricks.length; c++) {
@@ -202,7 +196,7 @@
                         canvas.style.boxShadow = `inset 0 0 30px ${b.color}`;
                         setTimeout(() => canvas.style.boxShadow = 'none', 100);
                         if(score === bricks.length * bricks[0].length) {
-                            gameRunning = false; statusText.innerText = "WIN"; statusText.style.color = "#c5a47e"; overlay.style.display = 'flex';
+                            victory();
                         }
                     }
                 }
@@ -210,6 +204,13 @@
         }
         draw();
         requestAnimationFrame(update);
+    }
+
+    function victory() {
+        gameRunning = false; createFirework();
+        statusText.innerText = "VICTORY!"; statusText.style.color = "#c5a47e"; 
+        subStatus.innerHTML = "СЮРПРИЗ: ПЛАТФОРМА ЗАРЯЖЕНА!<br>(Нажми для бесконечного режима)"; 
+        overlay.style.display = 'flex';
     }
 
     function draw() {
@@ -220,6 +221,16 @@
                 ctx.fillRect(b.x, b.y, b.w, b.h);
             }
         }));
+
+        // Отрисовка салюта при победе
+        fireworks.forEach((f, index) => {
+            f.x += f.dx; f.y += f.dy; f.life--;
+            ctx.fillStyle = f.color; ctx.globalAlpha = f.life/100;
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.size, 0, Math.PI*2); ctx.fill();
+            if(f.life <= 0) fireworks.splice(index, 1);
+        });
+        ctx.globalAlpha = 1;
+
         ctx.fillStyle = "#c5a47e"; ctx.shadowBlur = 15; ctx.shadowColor = "#c5a47e";
         ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
         ctx.fillStyle = "#fff"; ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
