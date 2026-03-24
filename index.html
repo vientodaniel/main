@@ -16,21 +16,19 @@
             --gray: #666;
         }
 
-        * { box-sizing: border-box; cursor: none; } /* Скрываем стандартный курсор для стиля */
+        * { box-sizing: border-box; cursor: none; } 
         body { 
             background-color: var(--bg); color: var(--white); 
             font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; 
             overflow-x: hidden;
         }
 
-        /* КАСТОМНЫЙ КУРСОР (СИЯНИЕ) */
         #cursor {
             position: fixed; width: 20px; height: 20px; background: var(--gold);
             border-radius: 50%; pointer-events: none; z-index: 9999;
             mix-blend-mode: difference; transition: transform 0.1s;
         }
 
-        /* ПРИВЕТСТВЕННЫЙ ЭКРАН (INTRO) */
         #intro {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 10000; display: flex;
@@ -43,7 +41,6 @@
         }
         .intro-words span { display: none; color: var(--gold); font-weight: 900; }
 
-        /* ФОНОВОЕ СИЯНИЕ */
         .ambient-light {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(197, 164, 126, 0.08) 0%, transparent 70%);
@@ -52,7 +49,6 @@
 
         .container { width: 90%; max-width: 1600px; margin: 0 auto; }
 
-        /* ШАПКА */
         header { 
             height: 100vh; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; text-align: center;
@@ -69,7 +65,6 @@
             text-transform: uppercase; opacity: 0; animation: fadeUp 1.5s 3s forwards;
         }
 
-        /* КОНТЕНТ */
         .section-label { 
             font-size: 0.6rem; letter-spacing: 5px; color: var(--gold); 
             text-transform: uppercase; margin-bottom: 100px; display: block;
@@ -90,7 +85,6 @@
         .project-info h3 { font-size: 2.5rem; font-weight: 300; letter-spacing: 5px; margin: 0 0 20px; text-transform: uppercase; }
         .project-info p { color: var(--gray); font-size: 1rem; line-height: 1.8; font-weight: 300; }
 
-        /* ФУТЕР */
         footer { padding: 200px 0; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); }
         .cta-text { font-size: clamp(1.5rem, 5vw, 4rem); font-weight: 100; margin-bottom: 60px; letter-spacing: 5px; }
         
@@ -131,14 +125,14 @@
         <header>
             <h1>Daniel` <span>Viento</span></h1>
             <div class="sub-header">Проектирование визуального превосходства</div>
-            <a href="/game" style="text-decoration: none; margin-top: 100px;" class="sub-header">Est. 2026 // Пасхалка</a>
+            <a href="game.html" style="text-decoration: none; margin-top: 100px;" class="sub-header">Est. 2026 // Пасхалка</a>
         </header>
 
         <section class="work-grid">
             <span class="section-label">Избранные проекты</span>
 
             <div class="project">
-                <img src="/static/images/prew1.jpg" alt="Work 01">
+                <img src="prew1.jpg" alt="Work 01">
                 <div class="project-info">
                     <h3>Чистая Идентичность</h3>
                     <p>Создание фундамента бренда через минимализм и строгую геометрию. Когда меньше значит больше.</p>
@@ -146,7 +140,7 @@
             </div>
 
             <div class="project">
-                <img src="/static/images/prew2.jpg" alt="Work 02">
+                <img src="prew2.jpg" alt="Work 02">
                 <div class="project-info">
                     <h3>Цифровая Душа</h3>
                     <p>Проработка освещения и атмосферы, которые заставляют пользователя почувствовать продукт каждой клеткой.</p>
@@ -162,7 +156,6 @@
     </div>
 
     <script>
-        // ЛОГИКА ИНТРО
         const words = document.querySelectorAll('.intro-words span');
         let currentWord = 0;
 
@@ -178,14 +171,12 @@
         }
         window.onload = showWords;
 
-        // КАСТОМНЫЙ КУРСОР
         const cursor = document.getElementById('cursor');
         document.addEventListener('mousemove', (e) => {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
 
-        // ПЛАВНЫЙ СКРОЛЛ КАРТИНОК
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
             const ambient = document.querySelector('.ambient-light');
