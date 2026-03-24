@@ -2,229 +2,334 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viento | Design Singularity Engine</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daniel` Viento | Breaker Engine</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505; /* Глубокий черный фон */
-            --gold: #c5a47e; /* Золотой акцент */
-            --white: #ffffff; /* Белый для свечения */
-            --red: #ff3b3b; /* Ярко-красный для частиц */
+            --bg: #050505;       /* Черный */
+            --gold: #c5a47e;     /* Золотой */
+            --white: #ffffff;   /* Белый */
+            --red: #ff3b3b;     /* Ярко-красный */
+            --gray: #333;       /* Серый (блоки) */
         }
 
+        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background: var(--bg);
             font-family: 'Montserrat', sans-serif; cursor: none; /* Скрываем стандартный курсор */
         }
 
-        canvas { display: block; }
-
-        /* ИНФО-БЛОК ПО ЦЕНТРУ: ТЕКСТ ПОД ЛОГО */
-        .info-overlay {
-            position: fixed; top: calc(50% + 120px); left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center; pointer-events: none;
-            z-index: 1000; transition: transform 0.1s ease-out;
+        /* ПОЛЕ ИГРЫ */
+        #game-container {
+            position: relative; width: 100%; height: calc(100% - 250px); /* Место под инфо-поле */
+            display: flex; justify-content: center; align-items: center;
         }
+        canvas { display: block; border-bottom: 2px solid rgba(197, 164, 126, 0.1); }
 
-        .info-overlay h2 {
-            font-weight: 100; letter-spacing: 20px;
-            text-transform: uppercase; margin: 0; font-size: 0.8rem;
-            color: var(--gold); 
-            /* СОЧНОЕ БЕЛОЕ СВЕЧЕНИЕ НА ТЕКСТЕ */
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 
-                         0 0 30px rgba(197, 164, 126, 0.8);
+        /* ИНФО-ПОЛЕ СНИЗУ */
+        #info-panel {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 250px;
+            background: rgba(5, 5, 5, 0.95); padding: 30px;
+            border-top: 1px solid rgba(197, 164, 126, 0.1);
+            overflow-y: auto; z-index: 100; cursor: auto;
         }
-
-        /* СТИЛИ ДЛЯ ЛОГОТИПА DV В ЦЕНТРЕ */
-        .dv-logo-overlay {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 999; pointer-events: none;
-            opacity: 0.3; filter: blur(1px);
-            transition: transform 0.15s ease-out;
-        }
-
-        .dv-logo-overlay svg text {
-            fill: var(--gold); font-weight: 900; font-size: 80px;
-            text-anchor: middle; dominant-baseline: middle;
-            /* МОЩНОЕ ЗОЛОТОЕ + БЕЛОЕ СВЕЧЕНИЕ НА ЛОГО */
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 
-                         0 0 50px rgba(197, 164, 126, 0.8),
-                         0 0 100px rgba(197, 164, 126, 0.5);
-        }
-
-        /* КНОПКА ВОЗВРАТА */
-        .back-link {
-            position: fixed; bottom: 40px; left: 50%;
-            transform: translateX(-50%);
-            color: var(--gold); text-decoration: none;
-            font-size: 0.6rem; letter-spacing: 5px;
-            text-transform: uppercase; border: 1px solid rgba(197, 164, 126, 0.3);
-            padding: 15px 30px; border-radius: 50px;
-            transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); z-index: 1001;
-            /* Свечение на кнопке */
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 15px rgba(197, 164, 126, 0.1);
-        }
-
-        .back-link:hover {
-            background: var(--gold); color: #000;
-            box-shadow: 0 0 30px rgba(197, 164, 126, 0.5);
-            text-shadow: none; transform: translateX(-50%) translateY(-2px);
-        }
+        
+        .info-content { max-width: 1200px; margin: 0 auto; color: var(--white); font-weight: 100; line-height: 1.8; }
+        .info-content h3 { font-size: 1.2rem; font-weight: 400; color: var(--gold); text-transform: uppercase; letter-spacing: 5px; margin-top: 0; }
+        .info-content p { font-size: 0.9rem; opacity: 0.7; margin-bottom: 15px; }
+        .info-content b { color: var(--gold); font-weight: 400; }
 
         /* КАСТОМНЫЙ КУРСОР-СИЯНИЕ */
         #cursor-glow {
-            position: fixed; width: 10px; height: 10px;
+            position: fixed; width: 15px; height: 15px;
             background: rgba(255, 255, 255, 0.8);
             border-radius: 50%; pointer-events: none; z-index: 1002;
             mix-blend-mode: difference;
             transition: transform 0.05s ease-out, opacity 0.3s;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 1),
-                        0 0 40px rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 1),
+                        0 0 50px rgba(255, 255, 255, 0.7);
+        }
+
+        /* КНОПКА ВОЗВРАТА */
+        .back-link {
+            position: absolute; top: 20px; left: 20px;
+            color: var(--gold); text-decoration: none;
+            font-size: 0.6rem; letter-spacing: 3px;
+            text-transform: uppercase; border: 1px solid rgba(197, 164, 126, 0.3);
+            padding: 8px 15px; border-radius: 50px;
+            transition: 0.3s; z-index: 1001; cursor: pointer;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        .back-link:hover { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(197, 164, 126, 0.4); }
+
+        /* ОВЕРЛЕЙ КОНЦА ИГРЫ */
+        #game-over-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 250px);
+            background: rgba(0,0,0,0.9); z-index: 99;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: var(--white); text-align: center; cursor: pointer;
+        }
+        #game-over-overlay h1 { font-size: 3rem; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 15px; text-shadow: 0 0 30px rgba(197, 164, 126, 0.8); margin: 0 0 30px; }
+        #game-over-overlay p { font-size: 0.9rem; font-weight: 100; text-transform: uppercase; letter-spacing: 5px; color: var(--white); opacity: 0.6; }
+
+        @media (max-width: 768px) {
+            #info-panel { height: 300px; padding: 20px; }
+            #game-container { height: calc(100% - 300px); }
+            * { cursor: auto; } #cursor-glow { display: none; }
+            #game-over-overlay h1 { font-size: 2rem; letter-spacing: 5px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="dv-logo-overlay" id="dvLogo">
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width="400" height="400">
-            <text x="50" y="50">DV</text>
-        </svg>
-    </div>
-
-    <div class="info-overlay" id="infoBlock">
-        <h2>Singularity Engine</h2>
-    </div>
-
-    <canvas id="canvas"></canvas>
-
-    <a href="./" class="back-link">Вернуться в реальность</a>
-
     <div id="cursor-glow"></div>
+    <a href="./" class="back-link">← Портфолио</a>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="game-over-overlay" onclick="startGame()">
+            <h1 id="status-text">ПОБЕДА</h1>
+            <p>Нажми (или тапни), чтобы начать заново</p>
+        </div>
+    </div>
+
+    <div id="info-panel">
+        <div class="info-content">
+            <h3>VIENTO BREAKER ENGINE // О ПРОЕКТЕ</h3>
+            <p>
+                <b>Суть игры:</b> Классическая аркада Breaker в фирменном стиле Daniel` Viento. Вы управляете золотой платформой (ваша идентичность), задача которой — удерживать в игре красный шар (ваши идеи). Шар разбивает серые блоки рутины и шаблонов. Игра заканчивается, когда все блоки очищены.
+            </p>
+            <p>
+                <b>Как играть:</b> На компьютере управляйте <b>мышью</b> — платформа следует за курсором. На телефоне — просто проведите <b>пальцем (тап)</b> по нижней части игрового поля, чтобы двигать платформу влево и вправо.
+            </p>
+            <p>
+                <b>На чем написано:</b> Движок полностью создан на **чистом JavaScript (Vanilla JS)** без использования сторонних фреймворков. Отрисовка происходит в теге **HTML5 Canvas**. Стилизация — современный CSS3 с неоновыми эффектами (`box-shadow`, `text-shadow`).
+            </p>
+            <p>
+                <b>Концепция:</b> Эта игра — метафора творческого процесса. Она показывает, что даже в жестких рамках рутины (блоков) можно найти яркий, светящийся путь, если точно управлять своими действиями и идеями. Ссылка «Вернуться» всегда вернет вас к чистоте портфолио.
+            </p>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const infoBlock = document.getElementById('infoBlock');
-        const dvLogo = document.getElementById('dvLogo');
         const cursorGlow = document.getElementById('cursor-glow');
+        const overlay = document.getElementById('game-over-overlay');
+        const statusText = document.getElementById('status-text');
 
-        let particles = [];
-        const mouse = { x: -100, y: -100, radius: 150 }; // Радиус отталкивания
+        // Глобальные настройки
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const GOLD = getComputedStyle(document.documentElement).getPropertyValue('--gold');
+        const RED = getComputedStyle(document.documentElement).getPropertyValue('--red');
+        const GRAY = getComputedStyle(document.documentElement).getPropertyValue('--gray');
 
-        // ЛОГИКА МЫШИ (Параллакс + Отталкивание частиц)
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.x;
-            mouse.y = e.y;
+        // Параметры игры
+        let gameRunning = false;
+        let paddle, ball, bricks = [];
+        let brickRowCount, brickColumnCount;
+        let lives, score;
+
+        // РЕСАЙЗ И ИНИЦИАЛИЗАЦИЯ
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
             
-            // Сдвиг кастомного курсора
-            cursorGlow.style.left = mouse.x + 'px';
-            cursorGlow.style.top = mouse.y + 'px';
-
-            // Расчет сдвига для параллакса
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-            
-            // Текст двигается быстрее (на переднем плане)
-            const moveX = (e.clientX - centerX) / 40;
-            const moveY = (e.clientY - centerY) / 40;
-            infoBlock.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-
-            // Логотип двигается медленнее (создает глубину)
-            const dvMoveX = (e.clientX - centerX) / 70;
-            const dvMoveY = (e.clientY - centerY) / 70;
-            dvLogo.style.transform = `translate(calc(-50% + ${dvMoveX}px), calc(-50% + ${dvMoveY}px))`;
-        });
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            init(); // Переинициализируем частицы при ресайзе
+            // Настройка сетки блоков в зависимости от экрана
+            brickColumnCount = isMobile ? 6 : 10;
+            brickRowCount = isMobile ? 5 : 8;
+            initGameObjects();
         }
-        window.addEventListener('resize', resize);
-        resize();
+        window.addEventListener('resize', resizeCanvas);
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 1; // Чуть увеличил размер для сочности
-                this.baseX = this.x;
-                this.baseY = this.y;
-                this.density = (Math.random() * 20) + 1; // "Тяжесть" частицы
-            }
+        // ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ
+        function initGameObjects() {
+            // Платформа
+            paddle = {
+                width: isMobile ? canvas.width * 0.3 : 150,
+                height: 15,
+                x: (canvas.width - 150) / 2,
+                y: canvas.height - 30,
+                color: GOLD
+            };
 
-            draw() {
-                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--red');
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.fill();
-            }
+            // Шар
+            ball = {
+                x: canvas.width / 2,
+                y: paddle.y - 10,
+                radius: 8,
+                speed: isMobile ? 5 : 7,
+                dx: isMobile ? 3 : 5 * (Math.random() < 0.5 ? 1 : -1),
+                dy: isMobile ? -5 : -7,
+                color: RED
+            };
 
-            update() {
-                // ЛОГИКА НОВОЙ КРАСНОЙ СИНГУЛЯРНОСТИ:
-                // Мышь — это гравитационный отталкиватель.
-                // Частицы образуют сферу в центре и разлетаются, когда курсор рядом.
-                
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
-                const sphereRadius = Math.min(canvas.width, canvas.height) * 0.25;
+            // Блоки
+            const brickWidth = (canvas.width - 20) / brickColumnCount;
+            const brickHeight = isMobile ? 25 : 30;
+            const brickPadding = 5;
+            const brickOffsetTop = 60;
+            const brickOffsetLeft = 10;
 
-                // Базовое движение: Частицы стремятся образовать сферу в центре
-                let angle = (Math.atan2(this.baseY - centerY, this.baseX - centerX));
-                const dxBase = Math.cos(angle) * sphereRadius;
-                const dyBase = Math.sin(angle) * sphereRadius;
-                const targetX = centerX + dxBase;
-                const targetY = centerY + dyBase;
-
-                // Плавное возвращение к базовой форме
-                this.x -= (this.x - targetX) / 100;
-                this.y -= (this.y - targetY) / 100;
-
-                // Взаимодействие с мышью: Отталкивание
-                let dxMouse = mouse.x - this.x;
-                let dyMouse = mouse.y - this.y;
-                let distanceMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
-                
-                if (distanceMouse < mouse.radius) {
-                    // Рассчитываем силу и направление отталкивания
-                    let forceDirectionX = dxMouse / distanceMouse;
-                    let forceDirectionY = dyMouse / distanceMouse;
-                    let maxDistance = mouse.radius;
-                    let force = (maxDistance - distanceMouse) / maxDistance;
-                    let directionX = forceDirectionX * force * this.density;
-                    let directionY = forceDirectionY * force * this.density;
-
-                    // Убегаем от курсора
-                    this.x -= directionX;
-                    this.y -= directionY;
+            bricks = [];
+            for(let c=0; c<brickColumnCount; c++) {
+                bricks[c] = [];
+                for(let r=0; r<brickRowCount; r++) {
+                    bricks[c][r] = { 
+                        x: (c * brickWidth) + brickOffsetLeft, 
+                        y: (r * brickHeight) + brickOffsetTop, 
+                        width: brickWidth - brickPadding,
+                        height: brickHeight - brickPadding,
+                        status: 1 // 1 = цел, 0 = разбит
+                    };
                 }
             }
         }
 
-        function init() {
-            particles = [];
-            for (let i = 0; i < 200; i++) { // Увеличил количество частиц
-                particles.push(new Particle());
-            }
+        // ЗАПУСК ИГРЫ
+        function startGame() {
+            lives = 1; // Убрал счетчик жизней для динамики, проигрыш сразу
+            score = 0;
+            overlay.style.display = 'none';
+            resizeCanvas();
+            initGameObjects();
+            gameRunning = true;
+            animate();
         }
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].draw();
-                particles[i].update();
+        // КОНТРОЛЬ (Мышь и Тач)
+        document.addEventListener('mousemove', (e) => {
+            if (!isMobile) {
+                // Платформа следует за мышью
+                const rect = canvas.getBoundingClientRect();
+                paddle.x = e.clientX - rect.left - paddle.width/2;
+                // Не даем выйти за границы
+                if (paddle.x < 0) paddle.x = 0;
+                if (paddle.x > canvas.width - paddle.width) paddle.x = canvas.width - paddle.width;
+
+                // Сдвиг кастомного курсора
+                cursorGlow.style.left = e.clientX + 'px';
+                cursorGlow.style.top = e.clientY + 'px';
             }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isMobile && gameRunning) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                paddle.x = touch.clientX - rect.left - paddle.width/2;
+                // Не даем выйти за границы
+                if (paddle.x < 0) paddle.x = 0;
+                if (paddle.x > canvas.width - paddle.width) paddle.x = canvas.width - paddle.width;
+            }
+        }, { passive: false });
+
+
+        // ОРИСОВКА
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Отрисовка блоков (со свечением)
+            for(let c=0; c<brickColumnCount; c++) {
+                for(let r=0; r<brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if(b.status === 1) {
+                        ctx.shadowBlur = 0; // Блоки не светятся, пока целы
+                        ctx.fillStyle = GRAY;
+                        ctx.fillRect(b.x, b.y, b.width, b.height);
+                    }
+                }
+            }
+
+            // Отрисовка платформы (с золотым свечением)
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = GOLD;
+            ctx.fillStyle = paddle.color;
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+
+            // Отрисовка шара (с красным свечением)
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = RED;
+            ctx.fillStyle = ball.color;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+            ctx.fill();
+            ctx.closePath();
+            
+            // Сброс тени для текста
+            ctx.shadowBlur = 0;
+        }
+
+        // ЛОГИКА (Анимация и столкновения)
+        function animate() {
+            if (!gameRunning) return;
+
+            // Движение шара
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Отскок от стен
+            if(ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.dx = -ball.dx;
+            if(ball.y - ball.radius < 0) ball.dy = -ball.dy;
+
+            // Отскок от платформы
+            if(ball.y + ball.radius > paddle.y && ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                ball.dy = -ball.speed; // Всегда вверх с постоянной скоростью
+                // Добавим немного угла в зависимости от места удара
+                const hitPos = (ball.x - (paddle.x + paddle.width/2)) / (paddle.width/2);
+                ball.dx = hitPos * ball.speed * 0.8;
+            }
+
+            // Проигрыш (упал вниз)
+            if(ball.y + ball.radius > canvas.height) {
+                gameRunning = false;
+                statusText.innerText = "ПРОИГРЫШ";
+                statusText.style.color = RED;
+                statusText.style.textShadow = `0 0 30px ${RED}`;
+                overlay.style.display = 'flex';
+            }
+
+            // Столкновение с блоками
+            for(let c=0; c<brickColumnCount; c++) {
+                for(let r=0; r<brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if(b.status === 1) {
+                        if(ball.x > b.x && ball.x < b.x + b.width && ball.y > b.y && ball.y < b.y + b.height) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            score++;
+                            
+                            // ЭФФЕКТ СИЯНИЯ ПРИ РАЗБИВАНИИ (мигание фона)
+                            canvas.style.boxShadow = `0 0 50px ${GOLD}`;
+                            setTimeout(() => canvas.style.boxShadow = 'none', 100);
+
+                            // Победа
+                            if(score === brickRowCount * brickColumnCount) {
+                                gameRunning = false;
+                                statusText.innerText = "ПОБЕДА";
+                                statusText.style.color = GOLD;
+                                statusText.style.textShadow = `0 0 30px ${GOLD}`;
+                                overlay.style.display = 'flex';
+                            }
+                        }
+                    }
+                }
+            }
+
+            draw();
             requestAnimationFrame(animate);
         }
 
-        init();
-        animate();
+        // Запуск
+        resizeCanvas();
+        overlay.style.display = 'flex'; // Показываем экран старта
+        statusText.innerText = "VIENTO BREAKER";
+        statusText.style.color = GOLD;
+        
     </script>
 </body>
 </html>
